@@ -15,11 +15,22 @@ def check_company_info(company_number):
         soup = BeautifulSoup(response.text, 'html.parser')
         company_name_tag = soup.find("h1", class_="heading-xlarge")
         address_tag = soup.find("dd", class_="text data")
+        website_tag = soup.find("a", class_="companyWebsite")
         
-        if company_name_tag and address_tag:
-            postcode = address_tag.text.strip().split()[-1]
-            return company_name_tag.text.strip(), postcode
-    return None, None
+        company_name = company_name_tag.text.strip() if company_name_tag else None
+        address = address_tag.text.strip() if address_tag else None
+        website = website_tag['href'] if website_tag else None
+        
+        # Handle foreign companies (those with 'FC' at the start of the company number)
+        if company_number.startswith('FC'):
+            return company_name, address, website
+        
+        # For non-foreign companies, extract the postcode (last two words of address)
+        if address:
+            postcode = " ".join(address.split()[-2:])  # Last two words for UK postcodes
+            return company_name, postcode, website
+        
+    return None, None, None
 
 # Function to get officer surnames
 def get_company_officers(company_number):
@@ -48,29 +59,32 @@ if uploaded_file is not None:
 
         # Lists to store results
         company_names = []
-        postcodes = []
+        postcodes_or_addresses = []
         officer_surnames = []
+        websites = []
 
         for index, row in df.iterrows():
             company_number = row['Company Number']
             
             # Fetch company info
-            company_name, postcode = check_company_info(company_number)
+            company_name, postcode_or_address, website = check_company_info(company_number)
             
             # Fetch officer surnames
             surnames = get_company_officers(company_number)
 
             # Save results
             company_names.append(company_name)
-            postcodes.append(postcode)
+            postcodes_or_addresses.append(postcode_or_address)
             officer_surnames.append(surnames)
+            websites.append(website)
 
         # Create a new DataFrame with the results
         result_df = pd.DataFrame({
             'Company Number': df['Company Number'],
             'Company Name': company_names,
-            'Postcode': postcodes,
-            'Officer Surnames': officer_surnames
+            'Postcode or Address': postcodes_or_addresses,
+            'Officer Surnames': officer_surnames,
+            'Company Website': websites
         })
 
         # Convert to CSV
