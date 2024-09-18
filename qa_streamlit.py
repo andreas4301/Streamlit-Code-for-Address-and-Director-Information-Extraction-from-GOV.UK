@@ -79,7 +79,7 @@ if uploaded_file is not None:
         result_df = pd.DataFrame({
             'Company Number': df['Company Number'],
             'Company Name': company_names,
-            'URL': df['URL']  # Keep the URL from the original file
+            'URL': df['URL'],  # Keep the URL from the original file
             'Postcode or Address': postcodes_or_addresses,
             'Officer Surnames': officer_surnames
         })
