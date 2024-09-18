@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+from io import StringIO
 
 # File upload
 uploaded_file = st.file_uploader("Upload an Excel file", type=["xlsx"])
@@ -64,17 +65,25 @@ if uploaded_file is not None:
             postcodes.append(postcode)
             officer_surnames.append(surnames)
 
-        # Add results to DataFrame
-        df['Company Name'] = company_names
-        df['Postcode'] = postcodes
-        df['Officer Surnames'] = officer_surnames
+        # Create a new DataFrame with the results
+        result_df = pd.DataFrame({
+            'Company Number': df['Company Number'],
+            'Company Name': company_names,
+            'Postcode': postcodes,
+            'Officer Surnames': officer_surnames
+        })
 
-        # Save to a new Excel file
-        output_file = "company_info_output.xlsx"
-        df[['Company Number', 'Company Name', 'Postcode', 'Officer Surnames']].to_excel(output_file, index=False)
+        # Convert to CSV
+        csv_output = StringIO()
+        result_df.to_csv(csv_output, index=False)
+        csv_output.seek(0)
 
-        st.write("Data extracted and saved successfully!")
-        st.download_button(label="Download Excel file", data=output_file, file_name=output_file)
-
+        # Provide the download button
+        st.download_button(
+            label="Download CSV",
+            data=csv_output.getvalue(),
+            file_name="company_info_output.csv",
+            mime="text/csv"
+        )
     else:
         st.write("Invalid file format. Make sure the first three columns are: Company Number, Name, and URL.")
