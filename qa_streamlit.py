@@ -15,20 +15,18 @@ def check_company_info(company_number):
         soup = BeautifulSoup(response.text, 'html.parser')
         company_name_tag = soup.find("h1", class_="heading-xlarge")
         address_tag = soup.find("dd", class_="text data")
-        website_tag = soup.find("a", class_="companyWebsite")
         
         company_name = company_name_tag.text.strip() if company_name_tag else None
         address = address_tag.text.strip() if address_tag else None
-        website = website_tag['href'] if website_tag else None
         
         # Handle foreign companies (those with 'FC' at the start of the company number)
         if company_number.startswith('FC'):
-            return company_name, address, website
+            return company_name, address
         
         # For non-foreign companies, extract the postcode (last two words of address)
         if address:
             postcode = " ".join(address.split()[-2:])  # Last two words for UK postcodes
-            return company_name, postcode, website
+            return company_name, postcode
         
     return None, None, None
 
@@ -55,7 +53,7 @@ if uploaded_file is not None:
     if len(df.columns) >= 3:
         df['Company Number'] = df.iloc[:, 0]  # Assuming first column is company number
         df['Company Name'] = df.iloc[:, 1]    # Assuming second column is company name
-        df['URL'] = df.iloc[:, 2]             # Assuming third column is URL (not used in this case)
+        df['URL'] = df.iloc[:, 2]             # Save the third column (URL)
 
         # Lists to store results
         company_names = []
@@ -76,15 +74,14 @@ if uploaded_file is not None:
             company_names.append(company_name)
             postcodes_or_addresses.append(postcode_or_address)
             officer_surnames.append(surnames)
-            websites.append(website)
 
         # Create a new DataFrame with the results
         result_df = pd.DataFrame({
             'Company Number': df['Company Number'],
             'Company Name': company_names,
+            'URL': df['URL']  # Keep the URL from the original file
             'Postcode or Address': postcodes_or_addresses,
-            'Officer Surnames': officer_surnames,
-            'Company Website': websites
+            'Officer Surnames': officer_surnames
         })
 
         # Convert to CSV
