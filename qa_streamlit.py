@@ -7,7 +7,7 @@ company_number = st.text_input("Enter Company Number")
 
 if company_number:
     # Functions to fetch company info
-    def check_company_info(company_number, expected_url):
+    def check_company_info(company_number):
         search_url = f"https://find-and-update.company-information.service.gov.uk/company/{company_number}"
         response = requests.get(search_url)
         if response.status_code == 200:
