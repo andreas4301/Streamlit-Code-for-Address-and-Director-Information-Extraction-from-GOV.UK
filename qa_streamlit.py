@@ -59,13 +59,12 @@ if uploaded_file is not None:
         company_names = []
         postcodes_or_addresses = []
         officer_surnames = []
-        websites = []
 
         for index, row in df.iterrows():
             company_number = row['Company Number']
             
             # Fetch company info
-            company_name, postcode_or_address, website = check_company_info(company_number)
+            company_name, postcode_or_address = check_company_info(company_number)
             
             # Fetch officer surnames
             surnames = get_company_officers(company_number)
