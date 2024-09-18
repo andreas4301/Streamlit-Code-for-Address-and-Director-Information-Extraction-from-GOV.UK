@@ -28,23 +28,29 @@ def get_company_officers(company_number):
         return officers
     return []
 
+# Function to split the long string into 8-character company numbers
+def split_company_numbers(input_string):
+    return [input_string[i:i+8] for i in range(0, len(input_string), 8)]
+
 # Streamlit UI
 st.title("Company Info Extractor")
 
-uploaded_file = st.file_uploader("Upload an Excel file with Company Numbers", type=["xlsx"])
+# Input field for a big string of company numbers
+company_numbers_string = st.text_input("Enter a string of company numbers (8 characters each, no spaces):")
 
-if uploaded_file:
-    # Read the Excel file
-    df = pd.read_excel(uploaded_file)
-
-    # Create new columns to store the company name, address, and officers
+if company_numbers_string:
+    # Split the string into individual company numbers
+    company_numbers = split_company_numbers(company_numbers_string)
+    
+    # Create a dataframe to store the results
+    df = pd.DataFrame(company_numbers, columns=['Company Number'])
     df['Company Name'] = ""
     df['Address'] = ""
     df['Officers'] = ""
 
-    # Process each company number in the file
+    # Process each company number
     for index, row in df.iterrows():
-        company_number = str(row[0])  # Assuming company number is in the first column
+        company_number = row['Company Number']
         company_name, address = check_company_info(company_number)
         officers = get_company_officers(company_number)
 
