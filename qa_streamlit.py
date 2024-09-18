@@ -28,20 +28,16 @@ def get_company_officers(company_number):
         return officers
     return []
 
-# Function to split the long string into 8-character company numbers
-def split_company_numbers(input_string):
-    return [input_string[i:i+8] for i in range(0, len(input_string), 8)]
-
 # Streamlit UI
 st.title("Company Info Extractor")
 
-# Input field for a big string of company numbers
-company_numbers_string = st.text_input("Enter a string of company numbers (8 characters each, no spaces):")
+# Input field for a space-separated string of company numbers
+company_numbers_string = st.text_area("Enter a space-separated list of company numbers (8 characters each):")
 
 if company_numbers_string:
-    # Split the string into individual company numbers
-    company_numbers = split_company_numbers(company_numbers_string)
-    
+    # Split the string into individual company numbers by spaces
+    company_numbers = company_numbers_string.split()
+
     # Create a dataframe to store the results
     df = pd.DataFrame(company_numbers, columns=['Company Number'])
     df['Company Name'] = ""
