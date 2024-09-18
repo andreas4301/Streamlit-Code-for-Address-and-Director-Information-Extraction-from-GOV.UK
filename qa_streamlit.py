@@ -2,6 +2,9 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+from openpyxl import Workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.styles import Alignment
 
 # Function to fetch company info
 def check_company_info(company_number):
@@ -42,23 +45,56 @@ if company_numbers_string:
     df = pd.DataFrame(company_numbers, columns=['Company Number'])
     df['Company Name'] = ""
     df['Address'] = ""
-    df['Officers'] = ""
+
+    max_officers = 0  # Track the maximum number of officers
 
     # Process each company number
-    for index, row in df.iterrows():
-        company_number = row['Company Number']
+    officer_data = []  # To hold officer data for all companies
+    for index, company_number in enumerate(company_numbers):
         company_name, address = check_company_info(company_number)
         officers = get_company_officers(company_number)
 
-        # Update the dataframe with fetched info
-        df.at[index, 'Company Name'] = company_name
-        df.at[index, 'Address'] = address
-        df.at[index, 'Officers'] = ", ".join(officers)
+        # Update max_officers if this company has more officers
+        max_officers = max(max_officers, len(officers))
+
+        # Store data for later use
+        officer_data.append({
+            'Company Number': company_number,
+            'Company Name': company_name,
+            'Address': address,
+            'Officers': officers
+        })
+
+    # Add officer columns dynamically based on the max number of officers
+    for i in range(1, max_officers + 1):
+        df[f'Officer {i}'] = ""
+
+    # Populate the dataframe with company info and officer data
+    for index, data in enumerate(officer_data):
+        df.at[index, 'Company Name'] = data['Company Name']
+        df.at[index, 'Address'] = data['Address']
+        for i, officer in enumerate(data['Officers']):
+            df.at[index, f'Officer {i+1}'] = officer
 
     # Display the dataframe in Streamlit
     st.write(df)
 
-    # Save the result to a new Excel file
+    # Save the result to a new Excel file with appropriate column widths
     output_file = "company_info_output.xlsx"
-    df.to_excel(output_file, index=False)
+    wb = Workbook()
+    ws = wb.active
+
+    # Write the dataframe to the Excel sheet
+    for r in dataframe_to_rows(df, index=False, header=True):
+        ws.append(r)
+
+    # Auto-adjust column widths
+    for column_cells in ws.columns:
+        length = max(len(str(cell.value)) for cell in column_cells)
+        ws.column_dimensions[column_cells[0].column_letter].width = length + 2
+
+    # Save the file
+    wb.save(output_file)
+
+    # Provide download option
     st.download_button(label="Download Excel file", data=open(output_file, "rb"), file_name=output_file)
